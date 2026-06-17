@@ -1,5 +1,14 @@
 # Changelog
 
+## `github.com/tempoxyz/mpp-go@0.1.3`
+
+### Patch Changes
+
+- Convert Go tests to use testify assertions. (by @BrendanRyan, [#48](https://github.com/tempoxyz/mpp-go/pull/48))
+- Reject credentials that omit `expires` when verifying challenges with the default expiry policy. (by @EfeBaranDurmaz, [#39](https://github.com/tempoxyz/mpp-go/pull/39))
+- Wallet-bind Tempo zero-amount proofs to close cross-account replay. The EIP-712 `Proof` message now leads with the payer `account` address (then `challengeId`, `realm`) and the MPP domain version is `"3"`. Verifiers rebuild the digest from the credential `source`, so client and server must both use v3. `ProofTypedDataHash` now takes an `account common.Address`; `ProofTypedData` exposes the typed data.
+- Note: v3 is not yet interoperable with the mppx (TypeScript) SDK, which still uses v2 (`Proof = [challengeId, realm]`, no `account`). (by @stevencartavia, [#57](https://github.com/tempoxyz/mpp-go/pull/57))
+
 ## `github.com/tempoxyz/mpp-go@0.1.2`
 
 ### Patch Changes
