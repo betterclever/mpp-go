@@ -403,6 +403,11 @@ func TestParseCredential(t *testing.T) {
 			want:   credential,
 		},
 		{
+			name:    "multiple payment credentials",
+			header:  credential.ToAuthorization() + ", " + credential.ToAuthorization(),
+			wantErr: `multiple Payment credentials`,
+		},
+		{
 			name:    "missing payment scheme",
 			header:  "Bearer token",
 			wantErr: `expected Payment scheme`,

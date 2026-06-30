@@ -94,6 +94,33 @@ func TestChargeMiddleware_EndToEnd(t *testing.T) {
 	}
 }
 
+func TestChargeMiddlewareRejectsMultiplePaymentCredentials(t *testing.T) {
+	payment := New(middlewareTestMethod{}, "api.example.com", "secret-key")
+	handler := ChargeMiddleware(payment, ChargeParams{Amount: "0.50"})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "handler should not be called")
+	}))
+
+	challengeReq := httptest.NewRequest(http.MethodGet, "/paid", nil)
+	challengeResp := httptest.NewRecorder()
+	handler.ServeHTTP(challengeResp, challengeReq)
+	require.Equal(t, http.StatusPaymentRequired, challengeResp.Code)
+
+	challenge, err := mpp.ParseChallenge(challengeResp.Header().Get("WWW-Authenticate"))
+	require.NoError(t, err)
+
+	credential := &mpp.Credential{
+		Challenge: challenge.ToEcho(),
+		Payload:   map[string]any{"type": "hash", "hash": "0xabc123"},
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/paid", nil)
+	req.Header.Set("Authorization", credential.ToAuthorization()+", "+credential.ToAuthorization())
+	resp := httptest.NewRecorder()
+	handler.ServeHTTP(resp, req)
+
+	assert.Equal(t, http.StatusBadRequest, resp.Code)
+}
+
 func TestChargeMiddlewareRejectsCRLFChallengeDescription(t *testing.T) {
 	payment := New(middlewareTestMethod{}, "api.example.com", "secret-key")
 	handler := ChargeMiddleware(payment, ChargeParams{
