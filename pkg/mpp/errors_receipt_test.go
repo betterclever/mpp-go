@@ -37,14 +37,14 @@ func TestPaymentErrorConstructors(t *testing.T) {
 			name:   "malformed credential",
 			err:    ErrMalformedCredential("bad credential"),
 			want:   ErrorTypeMalformedCredential,
-			status: http.StatusBadRequest,
+			status: http.StatusPaymentRequired,
 			detail: "bad credential",
 		},
 		{
 			name:   "invalid challenge",
 			err:    ErrInvalidChallenge("challenge-1", "tampered"),
 			want:   ErrorTypeInvalidChallenge,
-			status: http.StatusBadRequest,
+			status: http.StatusPaymentRequired,
 			detail: "challenge challenge-1: tampered",
 		},
 		{
@@ -108,6 +108,70 @@ func TestPaymentErrorConstructors(t *testing.T) {
 				return
 			}
 
+		})
+	}
+}
+
+func TestProblemTypeURIsUseCanonicalBase(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		got  ErrorType
+		want string
+	}{
+		{
+			name: "payment required",
+			got:  ErrorTypePaymentRequired,
+			want: "https://paymentauth.org/problems/payment-required",
+		},
+		{
+			name: "malformed credential",
+			got:  ErrorTypeMalformedCredential,
+			want: "https://paymentauth.org/problems/malformed-credential",
+		},
+		{
+			name: "invalid challenge",
+			got:  ErrorTypeInvalidChallenge,
+			want: "https://paymentauth.org/problems/invalid-challenge",
+		},
+		{
+			name: "verification failed",
+			got:  ErrorTypeVerificationFailed,
+			want: "https://paymentauth.org/problems/verification-failed",
+		},
+		{
+			name: "payment expired",
+			got:  ErrorTypePaymentExpired,
+			want: "https://paymentauth.org/problems/payment-expired",
+		},
+		{
+			name: "invalid payload",
+			got:  ErrorTypeInvalidPayload,
+			want: "https://paymentauth.org/problems/invalid-payload",
+		},
+		{
+			name: "bad request",
+			got:  ErrorTypeBadRequest,
+			want: "https://paymentauth.org/problems/bad-request",
+		},
+		{
+			name: "payment insufficient",
+			got:  ErrorTypePaymentInsufficient,
+			want: "https://paymentauth.org/problems/payment-insufficient",
+		},
+		{
+			name: "method unsupported",
+			got:  ErrorTypeMethodUnsupported,
+			want: "https://paymentauth.org/problems/method-unsupported",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, string(tt.got))
 		})
 	}
 }
