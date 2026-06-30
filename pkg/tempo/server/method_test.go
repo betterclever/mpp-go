@@ -88,6 +88,25 @@ func TestMethodBuildChargeRequest(t *testing.T) {
 			},
 		},
 		{
+			name: "includes suggested deposit",
+			config: MethodConfig{
+				Currency:  "0x20c0000000000000000000000000000000000001",
+				Recipient: "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+				ChainID:   42431,
+			},
+			params: mppserver.ChargeParams{
+				Amount:           "0.50",
+				SuggestedDeposit: "2.00",
+			},
+			assertions: func(t *testing.T, request tempo.ChargeRequest) {
+				t.Helper()
+				if !assert.Equalf(t, "2000000", request.SuggestedDeposit,
+					"request.SuggestedDeposit = %q, want 2000000", request.SuggestedDeposit) {
+					return
+				}
+			},
+		},
+		{
 			name: "includes splits and request modes",
 			config: MethodConfig{
 				Currency:       "0x20c0000000000000000000000000000000000001",

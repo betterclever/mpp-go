@@ -60,6 +60,8 @@ type ChargeParams struct {
 	Authorization string
 	// Amount is the human-readable charge amount.
 	Amount string
+	// SuggestedDeposit is the human-readable deposit amount advertised to session clients.
+	SuggestedDeposit string
 	// Currency overrides the method's default currency.
 	Currency string
 	// Recipient overrides the method's default recipient.
@@ -109,6 +111,9 @@ func (m *Mpp) buildChargeRequest(params ChargeParams) (map[string]any, error) {
 	request := map[string]any{
 		"amount":   params.Amount,
 		"currency": params.Currency,
+	}
+	if params.SuggestedDeposit != "" {
+		request["suggestedDeposit"] = params.SuggestedDeposit
 	}
 	if params.Recipient != "" {
 		request["recipient"] = params.Recipient

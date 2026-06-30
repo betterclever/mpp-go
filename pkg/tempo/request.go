@@ -75,6 +75,8 @@ type MethodDetails struct {
 type ChargeRequest struct {
 	// Amount is the canonical base-unit amount.
 	Amount string
+	// SuggestedDeposit is the canonical base-unit deposit hint for session clients.
+	SuggestedDeposit string
 	// Currency is the token contract address.
 	Currency string
 	// Recipient is the primary payee address.
@@ -91,6 +93,8 @@ type ChargeRequest struct {
 type ChargeRequestParams struct {
 	// Amount is the human-readable decimal amount.
 	Amount string
+	// SuggestedDeposit is the optional human-readable deposit hint for session clients.
+	SuggestedDeposit string
 	// Currency is the token contract address.
 	Currency string
 	// Recipient is the primary payee address.
@@ -144,6 +148,13 @@ func NormalizeChargeRequest(params ChargeRequestParams) (ChargeRequest, error) {
 	if err != nil {
 		return ChargeRequest{}, err
 	}
+	suggestedDeposit := ""
+	if params.SuggestedDeposit != "" {
+		suggestedDeposit, err = parseUnitsString(params.SuggestedDeposit, decimals)
+		if err != nil {
+			return ChargeRequest{}, fmt.Errorf("tempo: suggested deposit: %w", err)
+		}
+	}
 	currency, err := normalizeAddress("currency", params.Currency)
 	if err != nil {
 		return ChargeRequest{}, err
@@ -161,11 +172,12 @@ func NormalizeChargeRequest(params ChargeRequestParams) (ChargeRequest, error) {
 		return ChargeRequest{}, err
 	}
 	request := ChargeRequest{
-		Amount:      amount,
-		Currency:    currency,
-		Recipient:   recipient,
-		Description: params.Description,
-		ExternalID:  params.ExternalID,
+		Amount:           amount,
+		SuggestedDeposit: suggestedDeposit,
+		Currency:         currency,
+		Recipient:        recipient,
+		Description:      params.Description,
+		ExternalID:       params.ExternalID,
 		MethodDetails: MethodDetails{
 			FeePayer:       params.FeePayer,
 			FeePayerURL:    params.FeePayerURL,
@@ -184,17 +196,23 @@ func NormalizeChargeRequest(params ChargeRequestParams) (ChargeRequest, error) {
 // ParseChargeRequest parses a generic request map into the canonical Tempo shape.
 func ParseChargeRequest(input map[string]any) (ChargeRequest, error) {
 	request := ChargeRequest{
-		Amount:      asString(input["amount"]),
-		Currency:    asString(input["currency"]),
-		Recipient:   asString(input["recipient"]),
-		Description: asString(input["description"]),
-		ExternalID:  asString(input["externalId"]),
+		Amount:           asString(input["amount"]),
+		SuggestedDeposit: asString(input["suggestedDeposit"]),
+		Currency:         asString(input["currency"]),
+		Recipient:        asString(input["recipient"]),
+		Description:      asString(input["description"]),
+		ExternalID:       asString(input["externalId"]),
 	}
 	if request.Amount == "" || request.Currency == "" || request.Recipient == "" {
 		return ChargeRequest{}, fmt.Errorf("tempo: charge request requires amount, currency, and recipient")
 	}
 	if _, err := parseBaseUnitAmount(request.Amount); err != nil {
 		return ChargeRequest{}, err
+	}
+	if request.SuggestedDeposit != "" {
+		if _, err := parseBaseUnitAmount(request.SuggestedDeposit); err != nil {
+			return ChargeRequest{}, fmt.Errorf("tempo: suggested deposit: %w", err)
+		}
 	}
 	var err error
 	request.Currency, err = normalizeAddress("currency", request.Currency)
@@ -291,6 +309,9 @@ func (r ChargeRequest) Map() map[string]any {
 		"amount":    r.Amount,
 		"currency":  r.Currency,
 		"recipient": r.Recipient,
+	}
+	if r.SuggestedDeposit != "" {
+		request["suggestedDeposit"] = r.SuggestedDeposit
 	}
 	if r.Description != "" {
 		request["description"] = r.Description

@@ -13,16 +13,17 @@ func TestNormalizeChargeRequest_RoundTripsCanonicalShape(t *testing.T) {
 	t.Parallel()
 
 	request, err := NormalizeChargeRequest(ChargeRequestParams{
-		Amount:      "0.50",
-		Currency:    "0x20c0000000000000000000000000000000000001",
-		Recipient:   "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
-		Decimals:    6,
-		Description: "Coffee",
-		ExternalID:  "ext-123",
-		ChainID:     42431,
-		FeePayer:    true,
-		FeePayerURL: "https://fee-payer.example.com",
-		Memo:        "0x" + strings.ToUpper(strings.Repeat("ab", 32)),
+		Amount:           "0.50",
+		Currency:         "0x20c0000000000000000000000000000000000001",
+		Recipient:        "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+		Decimals:         6,
+		SuggestedDeposit: "2.00",
+		Description:      "Coffee",
+		ExternalID:       "ext-123",
+		ChainID:          42431,
+		FeePayer:         true,
+		FeePayerURL:      "https://fee-payer.example.com",
+		Memo:             "0x" + strings.ToUpper(strings.Repeat("ab", 32)),
 		Splits: []SplitParams{{
 			Amount:    "0.10",
 			Memo:      "0x" + strings.Repeat("cd", 32),
@@ -36,6 +37,10 @@ func TestNormalizeChargeRequest_RoundTripsCanonicalShape(t *testing.T) {
 	}
 	if !assert.Equalf(t, "500000", request.Amount,
 		"request.Amount = %q, want %q", request.Amount, "500000") {
+		return
+	}
+	if !assert.Equalf(t, "2000000", request.SuggestedDeposit,
+		"request.SuggestedDeposit = %q, want %q", request.SuggestedDeposit, "2000000") {
 		return
 	}
 	if !assert.Equalf(t, common.HexToAddress("0x20c0000000000000000000000000000000000001").Hex(), request.Currency,

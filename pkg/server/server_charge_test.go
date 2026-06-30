@@ -68,6 +68,30 @@ func TestMppCharge_UsesMetaAsChallengeMeta(t *testing.T) {
 
 }
 
+func TestMppCharge_IncludesSuggestedDeposit(t *testing.T) {
+	t.Parallel()
+
+	mppServer := New(chargeTestMethod{intents: map[string]Intent{"charge": verifyTestIntent{}}}, "api.example.com", "secret-key")
+	result, err := mppServer.Charge(context.Background(), ChargeParams{
+		Amount:           "0.50",
+		SuggestedDeposit: "2.00",
+		Currency:         "0x20c0000000000000000000000000000000000001",
+	})
+	if !assert.NoErrorf(t, err,
+		"Charge() error = %v", err) {
+		return
+	}
+	if !assert.True(t, result.IsChallenge(),
+		"result.IsChallenge() = false, want true") {
+		return
+	}
+	if !assert.Equalf(t, "2.00", result.Challenge.Request["suggestedDeposit"],
+		"result.Challenge.Request[suggestedDeposit] = %#v, want %q", result.Challenge.Request["suggestedDeposit"], "2.00") {
+		return
+	}
+
+}
+
 func TestMppCharge_RequiresChargeIntent(t *testing.T) {
 	t.Parallel()
 

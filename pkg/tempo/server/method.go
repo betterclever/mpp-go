@@ -120,18 +120,19 @@ func (m *Method) BuildChargeRequest(params mppserver.ChargeParams) (map[string]a
 		feePayerURL = m.feePayerURL
 	}
 	request, err := tempo.NormalizeChargeRequest(tempo.ChargeRequestParams{
-		Amount:         params.Amount,
-		Currency:       currency,
-		Recipient:      recipient,
-		Decimals:       m.decimals,
-		Description:    params.Description,
-		ExternalID:     params.ExternalID,
-		ChainID:        chainID,
-		FeePayer:       params.FeePayer || m.feePayer,
-		FeePayerURL:    feePayerURL,
-		Memo:           memo,
-		Splits:         append([]tempo.SplitParams(nil), params.Splits...),
-		SupportedModes: resolvedModes(memo, params.SupportedModes, m.supportedModes),
+		Amount:           params.Amount,
+		SuggestedDeposit: params.SuggestedDeposit,
+		Currency:         currency,
+		Recipient:        recipient,
+		Decimals:         m.decimals,
+		Description:      params.Description,
+		ExternalID:       params.ExternalID,
+		ChainID:          chainID,
+		FeePayer:         params.FeePayer || m.feePayer,
+		FeePayerURL:      feePayerURL,
+		Memo:             memo,
+		Splits:           append([]tempo.SplitParams(nil), params.Splits...),
+		SupportedModes:   resolvedModes(memo, params.SupportedModes, m.supportedModes),
 	})
 	if err != nil {
 		return nil, err
